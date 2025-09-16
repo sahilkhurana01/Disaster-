@@ -1,9 +1,0 @@
-[33macb9074d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Fix .gitignore to properly exclude credentials file
-[33m40e462de[m gitignore done
-[33ma8038c9d[m Remove Google Cloud Service Account credentials and add .gitignore
-[33mf52dfd02[m AI Alerts done
-[33mf5d6d0a8[m 6.1am
-[33m664096a5[m 6am
-[33m60e058be[m 4am
-[33mabaafc21[m before 1am
-[33ma8cfca76[m first commit
