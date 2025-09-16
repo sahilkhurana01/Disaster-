@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,19 +16,100 @@ import {
   Filter,
   RefreshCw,
   Phone,
-  Navigation
+  Navigation,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { useCommandStore } from '@/stores/commandStore';
 import { CommandSidebar } from '@/components/Sidebar/CommandSidebar';
 
+interface SheetResource {
+  id: string;
+  name: string;
+  type: 'hospital' | 'shelter' | 'school';
+  ambulances: number;
+  rescueTeamAvailable: number;
+  capacity?: number;
+  available?: number;
+  food?: number;
+  location: {
+    lat: number;
+    lng: number;
+  };
+}
+
 const Resources: React.FC = () => {
-  const { safetyPlaces, resources, userLocation } = useCommandStore();
+  const { userLocation } = useCommandStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'hospital' | 'shelter' | 'school'>('all');
+  const [sheetData, setSheetData] = useState<SheetResource[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const countNearbyAmbulances = (lat: number, lng: number) =>
-    resources.filter(r => r.type === 'ambulance')
-      .filter(r => Math.hypot(r.location.lat - lat, r.location.lng - lng) < 0.1).length;
+  // Google Sheets ID and range
+  const SHEET_ID = '1W82kmjNEDbnUPtyc1rjz24CjUn5V1RKZmlF6Ym9B2_A';
+  const SHEET_NAME = 'Resources';
+  
+  // Convert Google Sheets to CSV URL
+  const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
+
+  const fetchSheetData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(SHEET_CSV_URL);
+      if (!response.ok) {
+        throw new Error('Failed to fetch sheet data');
+      }
+      
+      const csvText = await response.text();
+      const rows = csvText.split('\n').map(row => 
+        row.split(',').map(cell => cell.replace(/"/g, '').trim())
+      );
+      
+      // Skip header row and process data
+      const dataRows = rows.slice(1).filter(row => row.length >= 3 && row[0]);
+      
+      const processedData: SheetResource[] = dataRows.map((row, index) => {
+        const [name, ambulances, rescueTeam] = row;
+        
+        // Determine type based on name (you can modify this logic)
+        const type = name.toLowerCase().includes('hospital') ? 'hospital' : 
+                    name.toLowerCase().includes('shelter') ? 'shelter' : 'school';
+        
+        // Generate mock coordinates around India (you'd replace with real coordinates)
+        const baseLat = 20.5937 + (Math.random() - 0.5) * 10;
+        const baseLng = 78.9629 + (Math.random() - 0.5) * 10;
+        
+        return {
+          id: `sheet-${index}`,
+          name: name || 'Unknown',
+          type,
+          ambulances: parseInt(ambulances) || 0,
+          rescueTeamAvailable: parseInt(rescueTeam) || 0,
+          capacity: Math.floor(Math.random() * 100) + 50, // Mock data
+          available: Math.floor(Math.random() * 50) + 10, // Mock data
+          food: Math.floor(Math.random() * 200) + 50, // Mock data
+          location: {
+            lat: baseLat,
+            lng: baseLng
+          }
+        };
+      });
+      
+      setSheetData(processedData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+      console.error('Error fetching sheet data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSheetData();
+  }, []);
 
   const getDistance = (lat: number, lng: number) => {
     if (!userLocation) return 'Unknown';
@@ -45,8 +126,8 @@ const Resources: React.FC = () => {
   const getPlaceIcon = (type: string) => {
     switch (type) {
       case 'hospital': return <Heart className="w-5 h-5 text-red-400" />;
-      case 'shelter': return <Home className="w-5 h-5 text-green-400" />;
-      case 'school': return <School className="w-5 h-5 text-blue-400" />;
+      case 'shelter': return <Home className="w-5 h-5 text-yellow-400" />;
+      case 'school': return <School className="w-5 h-5 text-yellow-400" />;
       default: return <MapPin className="w-5 h-5 text-gray-400" />;
     }
   };
@@ -54,23 +135,43 @@ const Resources: React.FC = () => {
   const getPlaceColor = (type: string) => {
     switch (type) {
       case 'hospital': return 'border-red-400/20 bg-red-400/10';
-      case 'shelter': return 'border-green-400/20 bg-green-400/10';
-      case 'school': return 'border-blue-400/20 bg-blue-400/10';
+      case 'shelter': return 'border-yellow-400/20 bg-yellow-400/10';
+      case 'school': return 'border-yellow-400/20 bg-yellow-400/10';
       default: return 'border-gray-400/20 bg-gray-400/10';
     }
   };
 
-  const filteredPlaces = safetyPlaces.filter(place => {
+  const filteredPlaces = sheetData.filter(place => {
     const matchesSearch = place.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          place.type.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === 'all' || place.type === filterType;
     return matchesSearch && matchesFilter;
   });
 
-  const getCapacityPercentage = (place: any) => {
+  const getCapacityPercentage = (place: SheetResource) => {
     if (!place.capacity || !place.available) return 0;
     return (place.available / place.capacity) * 100;
   };
+
+  const handleRefresh = () => {
+    fetchSheetData();
+  };
+
+  if (loading) {
+    return (
+      <div className="relative h-screen w-full bg-background overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900" />
+        <CommandSidebar />
+        <div className="relative z-10 h-full flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-400 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-white mb-2">Loading Resources</h2>
+            <p className="text-white/70">Fetching data from Google Sheets...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-screen w-full bg-background overflow-hidden">
@@ -87,19 +188,30 @@ const Resources: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className='relative left-14'>
               <h1 className="text-2xl font-bold text-white">Resources</h1>
-              <p className="text-white/70 text-sm">Safety places and emergency resources</p>
+              <p className="text-white/70 text-sm">Safety places and emergency resources from live data</p>
             </div>
             <div className="flex items-center space-x-2">
               <Badge variant="secondary" className="text-xs">
-                {safetyPlaces.length} Places
+                {sheetData.length} Places
               </Badge>
-              <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
-                <RefreshCw className="w-4 h-4 mr-1" />
+              <Button size="sm" variant="outline" onClick={handleRefresh} disabled={loading}>
+                <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
             </div>
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-900/20 border border-red-400/20 p-4 m-4 rounded-lg">
+            <div className="flex items-center space-x-2 text-red-400">
+              <AlertCircle className="w-5 h-5" />
+              <span className="font-medium">Error loading data:</span>
+              <span>{error}</span>
+            </div>
+          </div>
+        )}
 
         {/* Filters and Search */}
         <div className="bg-neutral-900/95 border-b border-white/10 p-4">
@@ -193,19 +305,31 @@ const Resources: React.FC = () => {
                             <span className="text-sm font-medium text-white">Ambulances</span>
                           </div>
                           <div className="text-2xl font-bold text-red-400">
-                            {countNearbyAmbulances(place.location.lat, place.location.lng)}
+                            {place.ambulances}
                           </div>
-                          <div className="text-xs text-white/70">Nearby available</div>
+                          <div className="text-xs text-white/70">Available</div>
+                        </div>
+
+                        {/* Rescue Team */}
+                        <div className="bg-neutral-800/50 rounded-lg p-3">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Users className="w-4 h-4 text-blue-400" />
+                            <span className="text-sm font-medium text-white">Rescue Team</span>
+                          </div>
+                          <div className="text-2xl font-bold text-blue-400">
+                            {place.rescueTeamAvailable}
+                          </div>
+                          <div className="text-xs text-white/70">Team members</div>
                         </div>
 
                         {/* Capacity */}
                         {place.capacity && (
                           <div className="bg-neutral-800/50 rounded-lg p-3">
                             <div className="flex items-center space-x-2 mb-2">
-                              <Users className="w-4 h-4 text-blue-400" />
+                              <Home className="w-4 h-4 text-green-400" />
                               <span className="text-sm font-medium text-white">Capacity</span>
                             </div>
-                            <div className="text-2xl font-bold text-blue-400">
+                            <div className="text-2xl font-bold text-green-400">
                               {place.available || 0}/{place.capacity}
                             </div>
                             <div className="mt-2">
@@ -219,21 +343,23 @@ const Resources: React.FC = () => {
                             </div>
                           </div>
                         )}
+                      </div>
 
-                        {/* Food Supplies */}
-                        {place.food !== undefined && (
+                      {/* Food Supplies */}
+                      {place.food !== undefined && (
+                        <div className="mt-4">
                           <div className="bg-neutral-800/50 rounded-lg p-3">
                             <div className="flex items-center space-x-2 mb-2">
-                              <Heart className="w-4 h-4 text-green-400" />
-                              <span className="text-sm font-medium text-white">Food</span>
+                              <Heart className="w-4 h-4 text-yellow-400" />
+                              <span className="text-sm font-medium text-white">Food Supplies</span>
                             </div>
-                            <div className="text-2xl font-bold text-green-400">
+                            <div className="text-2xl font-bold text-yellow-400">
                               {place.food}
                             </div>
                             <div className="text-xs text-white/70">Units available</div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
 
                       {/* Emergency Contact Info */}
                       <div className="mt-4 pt-4 border-t border-white/10">
@@ -250,14 +376,14 @@ const Resources: React.FC = () => {
               ))}
             </AnimatePresence>
 
-            {filteredPlaces.length === 0 && (
+            {filteredPlaces.length === 0 && !loading && (
               <div className="text-center py-12">
                 <MapPin className="w-12 h-12 text-white/30 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-white/70 mb-2">
-                  {searchTerm ? 'No places found' : 'No safety places detected'}
+                  {searchTerm ? 'No places found' : 'No resources available'}
                 </h3>
                 <p className="text-white/50 text-sm">
-                  {searchTerm ? 'Try adjusting your search terms' : 'Allow location access and refresh to find nearby safety places'}
+                  {searchTerm ? 'Try adjusting your search terms' : 'Check if the Google Sheet is accessible and has data'}
                 </p>
               </div>
             )}
@@ -269,5 +395,3 @@ const Resources: React.FC = () => {
 };
 
 export default Resources;
-
-

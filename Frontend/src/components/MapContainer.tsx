@@ -286,7 +286,7 @@ export const MapContainer: React.FC = () => {
     const map = mapInstanceRef.current;
     const layer = L.layerGroup().addTo(map);
     safetyPlaces.forEach((p) => {
-      const color = p.type === 'hospital' ? '#60a5fa' : p.type === 'shelter' ? '#16a34a' : '#a3e635';
+      const color = '#22c55e'; // All safety places are green
       const marker = L.circleMarker([p.location.lat, p.location.lng], {
         radius: 5,
         color,

@@ -37,9 +37,9 @@ export const AIAlertPopup: React.FC<AIAlertPopupProps> = ({
   }, [isVisible, onClose, autoCloseDelay]);
 
   const getAlertColor = (riskPercentage: number) => {
-    if (riskPercentage >= 80) return 'text-red-500 border-red-500 bg-red-500/10';
-    if (riskPercentage >= 60) return 'text-orange-500 border-orange-500 bg-orange-500/10';
-    if (riskPercentage >= 40) return 'text-yellow-500 border-yellow-500 bg-yellow-500/10';
+    if (riskPercentage >= 80) return 'text-red-500 border-red-500 bg-red-500/8';
+    if (riskPercentage >= 60) return 'text-orange-500 border-orange-500 bg-orange-500/8';
+    if (riskPercentage >= 40) return 'text-yellow-500 border-yellow-500 bg-yellow-500/8';
     return 'text-blue-500 border-blue-500 bg-blue-500/10';
   };
 

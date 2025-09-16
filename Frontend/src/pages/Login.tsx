@@ -15,7 +15,7 @@ const Login: React.FC = () => {
     >
       {/* Login Component */}
       <div 
-        className="relative bg-white bg-opacity-10 backdrop-blur-md rounded-none border border-white border-opacity-30 p-8 w-full max-w-md mx-4 shadow-2xl hover:bg-opacity-15 hover:backdrop-blur-lg transition-all duration-300"
+        className="relative  bg-white bg-opacity-10 backdrop-blur-md rounded-none border border-white border-opacity-20 p-8 w-full max-w-md mx-4 shadow-2xl hover:bg-opacity-15 hover:backdrop-blur-lg transition-all duration-300"
         style={{ 
           zIndex: 1,
           boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37), 0 0 0 1px rgba(255, 255, 255, 0.1)',

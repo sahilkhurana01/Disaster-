@@ -69,7 +69,7 @@ export const StatisticsPanel: React.FC = () => {
       icon: Shield,
       color: 'text-primary',
       bgColor: 'bg-primary/10',
-      change: '+234',
+
       trend: 'up'
     },
   ];
