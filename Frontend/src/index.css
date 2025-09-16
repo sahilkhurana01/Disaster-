@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* DISASTER RESPONSE COMMAND CENTER - Design System
+Dark, glassy, cinematic interface with neon red accents
+All colors MUST be HSL for proper theming
+*/
+
+@layer base {
+  :root {
+    /* Command Center Dark Theme - Always Dark */
+    --background: 220 25% 6%;
+    --background-secondary: 220 20% 8%;
+    --background-tertiary: 220 15% 10%;
+    --foreground: 210 20% 98%;
+
+    /* Glass Panel Effects */
+    --glass: 220 25% 6% / 0.8;
+    --glass-border: 220 20% 25% / 0.3;
+    --glass-hover: 220 25% 8% / 0.9;
+
+    /* Neon Red Alert System */
+    --alert-critical: 358 100% 62%;
+    --alert-warning: 38 92% 50%;
+    --alert-success: 142 71% 45%;
+    --alert-info: 217 91% 60%;
+
+    /* Command Interface */
+    --card: 220 25% 8% / 0.8;
+    --card-foreground: 210 20% 98%;
+    --card-border: 220 20% 25% / 0.3;
+
+    --popover: 220 25% 8%;
+    --popover-foreground: 210 20% 98%;
+
+    /* Primary Actions - Neon Red */
+    --primary: 358 100% 62%;
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 358 100% 62% / 0.4;
+
+    /* Secondary Elements */
+    --secondary: 220 20% 15%;
+    --secondary-foreground: 210 20% 90%;
+
+    /* Muted Elements */
+    --muted: 220 15% 12%;
+    --muted-foreground: 220 10% 65%;
+
+    /* Accent - Electric Blue */
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 98%;
+
+    /* Destructive Actions */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Borders & Inputs */
+    --border: 220 20% 25% / 0.3;
+    --input: 220 20% 15%;
+    --input-border: 220 20% 25%;
+    --ring: 358 100% 62% / 0.5;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    --gradient-glass: linear-gradient(135deg, hsl(var(--glass)), hsl(var(--glass-hover)));
+    --gradient-alert: linear-gradient(135deg, hsl(var(--alert-critical)), hsl(var(--alert-warning)));
+
+    /* Shadows */
+    --shadow-glass: 0 8px 32px hsl(220 25% 6% / 0.3);
+    --shadow-glow: 0 0 20px hsl(var(--primary-glow));
+    --shadow-alert: 0 0 30px hsl(var(--alert-critical) / 0.4);
+
+    /* Animations */
+    --duration-fast: 150ms;
+    --duration-normal: 300ms;
+    --duration-slow: 500ms;
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground overflow-hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
